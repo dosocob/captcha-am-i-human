@@ -479,14 +479,42 @@ function showEnding() {
         
         typeWriter(elements.endMessage, ending.message, 50);
         
-        // Add final credit after message
+        // Add final credit and replay button after message
         setTimeout(() => {
             const credit = document.createElement('p');
             credit.style.marginTop = '40px';
             credit.style.fontSize = '12px';
             credit.style.opacity = '0.5';
-            credit.innerHTML = 'CAPTCHA: Am I Human?<br><br>A game about identity.<br><br>[Refresh to play again]';
+            credit.innerHTML = 'CAPTCHA: Am I Human?<br><br>A game about identity.';
             elements.endMessage.parentElement.appendChild(credit);
+            
+            // Add replay button
+            const replayBtn = document.createElement('button');
+            replayBtn.textContent = '🔄 VERIFY AGAIN';
+            replayBtn.className = 'replay-btn';
+            replayBtn.style.cssText = `
+                margin-top: 30px;
+                padding: 12px 24px;
+                font-size: 14px;
+                font-family: inherit;
+                background: transparent;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                color: #fff;
+                cursor: pointer;
+                transition: all 0.3s;
+                opacity: 0;
+                animation: fadeIn 1s forwards 0.5s;
+            `;
+            replayBtn.onmouseover = () => {
+                replayBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+                replayBtn.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+            };
+            replayBtn.onmouseout = () => {
+                replayBtn.style.background = 'transparent';
+                replayBtn.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            };
+            replayBtn.onclick = restartGame;
+            elements.endMessage.parentElement.appendChild(replayBtn);
         }, ending.message.length * 50 + 2000);
         
     }, 1000);
@@ -580,8 +608,53 @@ function setupSoundToggle() {
     }
 }
 
+// === RESTART GAME ===
+
+function restartGame() {
+    // Reset game state
+    gameState.currentLevel = 0;
+    gameState.selectedTiles = [];
+    gameState.playerName = null;
+    gameState.playerLocation = null;
+    gameState.playerFear = null;
+    gameState.humanProof = null;
+    gameState.startTime = null;
+    gameState.hasGlitched = false;
+    
+    // Remove horror mode
+    document.body.classList.remove('horror-mode');
+    
+    // Stop ambient audio
+    stopAmbientAudio();
+    
+    // Reset UI elements
+    elements.overlay.classList.remove('fade');
+    elements.endScreen.classList.add('hidden');
+    elements.captchaContainer.classList.remove('hidden', 'expanded');
+    elements.captchaChallenge.classList.add('hidden');
+    elements.textChallenge.classList.add('hidden');
+    elements.glitchOverlay.classList.remove('active');
+    elements.progressFill.style.width = '0%';
+    elements.progressFill.className = '';
+    
+    // Reset checkbox
+    elements.checkbox.classList.remove('checked');
+    elements.checkbox.innerHTML = '<div class="checkmark"></div>';
+    
+    // Clear end message extras
+    const endContent = elements.endMessage.parentElement;
+    while (endContent.children.length > 1) {
+        endContent.removeChild(endContent.lastChild);
+    }
+    elements.endMessage.textContent = '';
+    
+    // Re-setup checkbox click
+    setupCheckboxClick();
+}
+
 // Make functions available globally for levels.js callbacks
 window.triggerGlitch = triggerGlitch;
 window.enableHorrorEffects = enableHorrorEffects;
 window.showEnding = showEnding;
+window.restartGame = restartGame;
 window.gameState = gameState;
